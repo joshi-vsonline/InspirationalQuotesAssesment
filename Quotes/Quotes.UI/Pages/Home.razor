@@ -1,7 +1,154 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using Quotes.UI.DTO
+@using Quotes.UI.QuotesServices
+@inject IQuotesApiService QuotesApiService
 
-<h1>Hello, world!</h1>
+<PageTitle>Quotes</PageTitle>
 
-Welcome to your new app.
+<h3>Add/Edit Quote</h3>
+<EditForm Model="@currentQuote" OnValidSubmit="@(currentQuote.Id == 0 ? AddQuote : UpdateQuote)">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label>Author:</label>
+        <InputText @bind-Value="currentQuote.Author" />
+    </div>
+    <div>
+        <label>Content:</label>
+        <InputText @bind-Value="currentQuote.QuoteContent" />
+    </div>
+    <div>
+        <label>Tags (comma separated):</label>
+        <InputText @bind-Value="currentTags" />
+    </div>
+    <div>
+        <button type="submit">@((currentQuote.Id == 0) ? "Add Quote" : "Update Quote")</button>
+        <button type="button" @onclick="ClearForm">Clear</button>
+    </div>
+</EditForm>
+
+<h3>Search Quotes</h3>
+<EditForm Model="@searchCriteria" OnValidSubmit="SearchQuotes">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label>Author:</label>
+        <InputText @bind-Value="searchCriteria.Author" />
+    </div>
+    <div>
+        <label>Tags (comma separated):</label>
+        <InputText @bind-Value="searchCriteria.Tags" />
+    </div>
+    <div>
+        <label>Quote Content:</label>
+        <InputText @bind-Value="searchCriteria.QuoteContent" />
+    </div>
+    <div>
+        <button type="submit">Search</button>
+    </div>
+</EditForm>
+
+<h3>Quotes</h3>
+@if (quotes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        @foreach (var quote in quotes)
+        {
+            <div style="border: 1px solid black; padding: 10px; margin: 5px;">
+                <p><strong>Author:</strong> @quote.Author</p>
+                <p><strong>Content:</strong> @quote.QuoteContent</p>
+                <p><strong>Tags:</strong> @string.Join(", ", quote.Tags)</p>
+                <button @onclick="() => EditQuote(quote.Id)">Edit</button>
+                <button @onclick="() => DeleteQuote(quote.Id)">Delete</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<QuoteDto> quotes = new();
+    private QuoteDto currentQuote = new();
+    private string currentTags = string.Empty;
+    private SearchCriteria searchCriteria = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuotes();
+    }
+
+    private async Task LoadQuotes()
+    {
+        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
+    }
+
+    private async Task AddQuote()
+    {
+        currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
+        var createQuoteDto = new CreateQuoteDto
+            {
+                Author = currentQuote.Author,
+                Tags = currentQuote.Tags,
+                QuoteContent = currentQuote.QuoteContent
+            };
+        await QuotesApiService.AddQuotes(new[] { createQuoteDto });
+        await LoadQuotes();
+        ClearForm();
+    }
+
+    private async Task UpdateQuote()
+    {
+        currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
+        var createQuoteDto = new CreateQuoteDto
+            {
+                Author = currentQuote.Author,
+                Tags = currentQuote.Tags,
+                QuoteContent = currentQuote.QuoteContent
+            };
+        await QuotesApiService.UpdateQuote(currentQuote.Id, createQuoteDto);
+        await LoadQuotes();
+        ClearForm();
+    }
+
+    private async Task DeleteQuote(int id)
+    {
+        await QuotesApiService.DeleteQuote(id);
+        await LoadQuotes();
+    }
+
+    private async Task EditQuote(int id)
+    {
+        var quote = await QuotesApiService.GetQuoteById(id);
+        currentQuote = new QuoteDto
+            {
+                Id = quote.Id,
+                Author = quote.Author,
+                Tags = quote.Tags,
+                QuoteContent = quote.QuoteContent
+            };
+        currentTags = string.Join(", ", quote.Tags);
+    }
+
+    private void ClearForm()
+    {
+        currentQuote = new QuoteDto();
+        currentTags = string.Empty;
+    }
+
+    private async Task SearchQuotes()
+    {
+        var tagsList = string.IsNullOrWhiteSpace(searchCriteria.Tags) ? new List<string>() : searchCriteria.Tags.Split(',').Select(tag => tag.Trim()).ToList();
+        quotes = (await QuotesApiService.SearchQuotes(searchCriteria.Author, tagsList, searchCriteria.QuoteContent)).ToList();
+    }
+
+    private class SearchCriteria
+    {
+        public string Author { get; set; }
+        public string Tags { get; set; }
+        public string QuoteContent { get; set; }
+    }
+}

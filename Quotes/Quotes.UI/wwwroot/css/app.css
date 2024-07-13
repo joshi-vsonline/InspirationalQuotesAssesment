@@ -1,3 +1,12 @@
+:root {
+    --Proj-Blue: #4479FF;
+    --WHite: #FFFFFF;
+    --Sub-Text: #5E5F79;
+    --Heading-Text: #1A2447;
+    --Proj-Green: #49CE51;
+    --Proj-Red: #dc3545;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
