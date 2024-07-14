@@ -3,152 +3,81 @@
 @using Quotes.UI.DTO
 @using Quotes.UI.QuotesServices
 @inject IQuotesApiService QuotesApiService
-
+@inject NavigationManager NavigationManager
 <PageTitle>Quotes</PageTitle>
 
-<h3>Add/Edit Quote</h3>
-<EditForm Model="@currentQuote" OnValidSubmit="@(currentQuote.Id == 0 ? AddQuote : UpdateQuote)">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div>
-        <label>Author:</label>
-        <InputText @bind-Value="currentQuote.Author" />
-    </div>
-    <div>
-        <label>Content:</label>
-        <InputText @bind-Value="currentQuote.QuoteContent" />
-    </div>
-    <div>
-        <label>Tags (comma separated):</label>
-        <InputText @bind-Value="currentTags" />
-    </div>
-    <div>
-        <button type="submit">@((currentQuote.Id == 0) ? "Add Quote" : "Update Quote")</button>
-        <button type="button" @onclick="ClearForm">Clear</button>
-    </div>
-</EditForm>
-
-<h3>Search Quotes</h3>
-<EditForm Model="@searchCriteria" OnValidSubmit="SearchQuotes">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div>
-        <label>Author:</label>
-        <InputText @bind-Value="searchCriteria.Author" />
-    </div>
-    <div>
-        <label>Tags (comma separated):</label>
-        <InputText @bind-Value="searchCriteria.Tags" />
-    </div>
-    <div>
-        <label>Quote Content:</label>
-        <InputText @bind-Value="searchCriteria.QuoteContent" />
-    </div>
-    <div>
-        <button type="submit">Search</button>
-    </div>
-</EditForm>
-
-<h3>Quotes</h3>
-@if (quotes == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div>
-        @foreach (var quote in quotes)
-        {
-            <div style="border: 1px solid black; padding: 10px; margin: 5px;">
-                <p><strong>Author:</strong> @quote.Author</p>
-                <p><strong>Content:</strong> @quote.QuoteContent</p>
-                <p><strong>Tags:</strong> @string.Join(", ", quote.Tags)</p>
-                <button @onclick="() => EditQuote(quote.Id)">Edit</button>
-                <button @onclick="() => DeleteQuote(quote.Id)">Delete</button>
-            </div>
-        }
-    </div>
-}
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Search Quotes</MudText>
+                <MudCollapse Expanded="@isSearchExpanded">
+                    <MudTextField Label="Author" @bind-Value="searchAuthor"></MudTextField>
+                    <MudTextField Label="Tags (comma separated)" @bind-Value="searchTags"></MudTextField>
+                    <MudTextField Label="Quote Content" @bind-Value="searchContent"></MudTextField>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchQuotes">Search</MudButton>
+                </MudCollapse>
+                <MudButton Variant="Variant.Text" OnClick="@(()=>isSearchExpanded = !isSearchExpanded)">
+                    @(isSearchExpanded ? "Hide Search" : "Show Search")
+                </MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddQuote">Add Quote</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable Items="quotes" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Author</MudTh>
+                <MudTh>Tags</MudTh>
+                <MudTh>Quote Content</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Author</MudTd>
+                <MudTd>@string.Join(", ", @context.Tags)</MudTd>
+                <MudTd>@context.QuoteContent</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(()=>EditQuote(context.Id))"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary" OnClick="@(()=>DeleteQuote(context.Id))"></MudIconButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+</MudGrid>
 
 @code {
-    private List<QuoteDto> quotes = new();
-    private QuoteDto currentQuote = new();
-    private string currentTags = string.Empty;
-    private SearchCriteria searchCriteria = new();
+    private bool isSearchExpanded = false;
+    private string searchAuthor;
+    private string searchTags;
+    private string searchContent;
+    private List<Quotes.UI.DTO.QuoteDto> quotes = new();
 
     protected override async Task OnInitializedAsync()
-    {
-        await LoadQuotes();
-    }
-
-    private async Task LoadQuotes()
     {
         quotes = (await QuotesApiService.GetAllQuotes()).ToList();
     }
 
-    private async Task AddQuote()
+    private async Task SearchQuotes()
     {
-        currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
-        var createQuoteDto = new CreateQuoteDto
-            {
-                Author = currentQuote.Author,
-                Tags = currentQuote.Tags,
-                QuoteContent = currentQuote.QuoteContent
-            };
-        await QuotesApiService.AddQuotes(new[] { createQuoteDto });
-        await LoadQuotes();
-        ClearForm();
+        var tags = string.IsNullOrWhiteSpace(searchTags) ? new List<string>() : searchTags.Split(',').ToList();
+        quotes = (await QuotesApiService.SearchQuotes(searchAuthor, tags, searchContent)).ToList();
     }
 
-    private async Task UpdateQuote()
+    private void AddQuote()
     {
-        currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
-        var createQuoteDto = new CreateQuoteDto
-            {
-                Author = currentQuote.Author,
-                Tags = currentQuote.Tags,
-                QuoteContent = currentQuote.QuoteContent
-            };
-        await QuotesApiService.UpdateQuote(currentQuote.Id, createQuoteDto);
-        await LoadQuotes();
-        ClearForm();
+        NavigationManager.NavigateTo("/add-edit-quote/0");
+    }
+
+    private void EditQuote(int id)
+    {
+        NavigationManager.NavigateTo($"/add-edit-quote/{id}");
     }
 
     private async Task DeleteQuote(int id)
     {
         await QuotesApiService.DeleteQuote(id);
-        await LoadQuotes();
-    }
-
-    private async Task EditQuote(int id)
-    {
-        var quote = await QuotesApiService.GetQuoteById(id);
-        currentQuote = new QuoteDto
-            {
-                Id = quote.Id,
-                Author = quote.Author,
-                Tags = quote.Tags,
-                QuoteContent = quote.QuoteContent
-            };
-        currentTags = string.Join(", ", quote.Tags);
-    }
-
-    private void ClearForm()
-    {
-        currentQuote = new QuoteDto();
-        currentTags = string.Empty;
-    }
-
-    private async Task SearchQuotes()
-    {
-        var tagsList = string.IsNullOrWhiteSpace(searchCriteria.Tags) ? new List<string>() : searchCriteria.Tags.Split(',').Select(tag => tag.Trim()).ToList();
-        quotes = (await QuotesApiService.SearchQuotes(searchCriteria.Author, tagsList, searchCriteria.QuoteContent)).ToList();
-    }
-
-    private class SearchCriteria
-    {
-        public string Author { get; set; }
-        public string Tags { get; set; }
-        public string QuoteContent { get; set; }
+        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
     }
 }

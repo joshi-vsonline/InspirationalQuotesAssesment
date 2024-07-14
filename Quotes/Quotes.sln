@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quotes.Api", "Quotes.Api\Quotes.Api.csproj", "{55107731-CBA6-4E4F-BD2E-AEC1CC2AD6AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quotes.Api", "Quotes.Api\Quotes.Api.csproj", "{55107731-CBA6-4E4F-BD2E-AEC1CC2AD6AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quotes.UI", "Quotes.UI\Quotes.UI.csproj", "{29D714D9-9DC8-40D8-AAD4-3EB8B47943CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quotes.UI", "Quotes.UI\Quotes.UI.csproj", "{29D714D9-9DC8-40D8-AAD4-3EB8B47943CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quotes.Tests", "Quotes.Tests\Quotes.Tests.csproj", "{4A0205B9-990E-4E33-8288-6CF80960180D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quotes.Tests", "Quotes.Tests\Quotes.Tests.csproj", "{4A0205B9-990E-4E33-8288-6CF80960180D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

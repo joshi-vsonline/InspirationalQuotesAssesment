@@ -1,0 +1,59 @@
+﻿@page "/add-edit-quote/{id:int}"
+@inject Quotes.UI.QuotesServices.IQuotesApiService QuotesApiService
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
+
+<h3>AddEditQuote</h3>
+
+<MudPaper>
+    <MudText Typo="Typo.h6">@((Id == 0) ? "Add Quote" : "Edit Quote")</MudText>
+    <MudForm @ref="form">
+        <MudTextField Label="Author" @bind-Value="quote.Author" Required="true" />
+        <MudTextField Label="Tags (comma separated)" @bind-Value="tags" Required="true" />
+        <MudTextField Label="Quote Content" @bind-Value="quote.QuoteContent" Required="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuote">Save</MudButton>
+    </MudForm>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Quotes.UI.DTO.CreateQuoteDto quote = new();
+    private string tags;
+    private MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            var quoteDto = await QuotesApiService.GetQuoteById(Id);
+            quote = new Quotes.UI.DTO.CreateQuoteDto
+                {
+                    Author = quoteDto.Author,
+                    Tags = quoteDto.Tags,
+                    QuoteContent = quoteDto.QuoteContent
+                };
+            tags = string.Join(", ", quoteDto.Tags);
+        }
+    }
+
+    private async Task SaveQuote()
+    {
+        await form.Validate();
+        if (!form.IsValid)
+            return;
+
+        quote.Tags = tags.Split(',').Select(tag => tag.Trim()).ToList();
+        if (Id == 0)
+        {
+            await QuotesApiService.AddQuotes(new List<Quotes.UI.DTO.CreateQuoteDto> { quote });
+        }
+        else
+        {
+            await QuotesApiService.UpdateQuote(Id, quote);
+        }
+
+        Navigation.NavigateTo("/");
+    }
+}
