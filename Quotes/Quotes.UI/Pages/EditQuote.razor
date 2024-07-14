@@ -1,0 +1,66 @@
+﻿@page "/edit-quote/{id:int}"
+@inject Quotes.UI.QuotesServices.IQuotesApiService QuotesApiService
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
+@using Quotes.UI.DTO
+
+<div class="d-flex flex-column">
+    <MudText Typo="Typo.h6">Edit Quote</MudText>
+    <MudPaper>
+        <MudForm @ref="form">
+            <MudTextField Label="Author" @bind-Value="quote.Author" Required="true" Variant="Variant.Outlined" />
+            <MudTextField Label="Tags (comma separated)" @bind-Value="tags" Required="true" Variant="Variant.Outlined" />
+            <MudTextField Label="Quote" @bind-Value="quote.QuoteContent" Required="true" Variant="Variant.Outlined" />
+            <div class="d-flex flex-row justify-content-center mt-2 mb-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuote" Class="mr-2">Update</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GoToHome" Class="ml-2">Back</MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</div>
+
+
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CreateQuoteDto quote = new();
+    private string tags;
+    private MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            var quoteDto = await QuotesApiService.GetQuoteById(Id);
+            quote = new Quotes.UI.DTO.CreateQuoteDto
+                {
+                    Author = quoteDto.Author,
+                    Tags = quoteDto.Tags,
+                    QuoteContent = quoteDto.QuoteContent
+                };
+            tags = string.Join(", ", quoteDto.Tags);
+        }
+    }
+
+    private async Task SaveQuote()
+    {
+        await form.Validate();
+        if (!form.IsValid)
+            return;
+
+        quote.Tags = tags.Split(',').Select(tag => tag.Trim()).ToList();
+        if (Id != null)
+        {
+            await QuotesApiService.UpdateQuote(Id, quote);
+        }
+
+        Navigation.NavigateTo("/");
+    }
+
+    private void GoToHome(){
+        Navigation.NavigateTo("/");
+    }
+}
