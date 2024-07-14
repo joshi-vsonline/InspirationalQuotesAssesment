@@ -11,7 +11,7 @@
         <MudCard>
             <MudCardContent>
                 <div class="d-flex flex-row justify-content-between">
-                    <MudText Typo="Typo.h6">Search Quotes</MudText>
+                    <MudText Typo="Typo.h6" Style="color:dimgrey"><span><MudIconButton Icon="@Icons.Material.Filled.Search" OnClick="@(()=>isSearchExpanded = !isSearchExpanded)"></MudIconButton></span>Search Quotes</MudText>
                     <MudIconButton Icon="@Icons.Material.Filled.ArrowDropDown" Color="Color.Primary" OnClick="@(()=>isSearchExpanded = !isSearchExpanded)"></MudIconButton>
                 </div>
                 
@@ -21,9 +21,8 @@
                     <MudTextField Label="Quote Content" @bind-Value="searchContent" Variant="Variant.Outlined"></MudTextField>
                     <div class="d-flex flex-row justify-content-center mt-2">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchQuotes" Class="mr-2">Search</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="clearSearch" Class="ml-2">Clear Search</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="clearSearch" Class="ml-2">Clear Search</MudButton>
                     </div>
-                    
                 </MudCollapse>
                 
             </MudCardContent>
@@ -31,7 +30,7 @@
     </MudItem>
     <MudItem xs="12">
         <div class="d-flex flex-row justify-content-between mt-1 mb-1">
-            <MudText Typo="Typo.h4" Color="Color.Primary">Inspirational Quotes</MudText>
+            <MudText Typo="Typo.h4" Style="color:var(--Heading-Text)">Inspirational Quotes</MudText>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddQuote">Add Quote</MudButton>
         </div>
         
