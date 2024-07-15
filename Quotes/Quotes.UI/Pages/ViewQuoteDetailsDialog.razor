@@ -1,0 +1,32 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudDivider Class="mb-2" />
+        <MudText Typo="Typo.subtitle1">Author:</MudText>
+        <MudText>@Author</MudText>
+        <MudDivider Class="mb-2" />
+        <MudText Typo="Typo.subtitle1">Tags:</MudText>
+        <MudText>@Tags</MudText>
+        <MudDivider Class="mb-2" />
+        <MudText Typo="Typo.subtitle1">Quote:</MudText>
+        <MudText>@QuoteContent</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string Author { get; set; }
+
+    [Parameter]
+    public string Tags { get; set; }
+
+    [Parameter]
+    public string QuoteContent { get; set; }
+
+    private void CloseDialog() => MudDialog.Close();
+}

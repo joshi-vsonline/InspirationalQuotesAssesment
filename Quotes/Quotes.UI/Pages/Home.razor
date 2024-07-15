@@ -4,6 +4,7 @@
 @using Quotes.UI.QuotesServices
 @inject IQuotesApiService QuotesApiService
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 <PageTitle>Quotes</PageTitle>
 
 <MudGrid>
@@ -30,7 +31,10 @@
     </MudItem>
     <MudItem xs="12">
         <div class="d-flex flex-row justify-content-between mt-1 mb-1">
-            <MudText Typo="Typo.h4" Style="color:var(--Heading-Text)">Inspirational Quotes</MudText>
+            <div class="d-flex align-content-center">
+                <MudText Typo="Typo.h4" Style="color:var(--Heading-Text)">Inspirational Quotes</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Primary" OnClick="LoadQuotes"></MudIconButton>
+            </div>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddQuote">Add Quote</MudButton>
         </div>
         
@@ -48,8 +52,11 @@
                 <MudTd>@string.Join(", ", @context.Tags)</MudTd>
                 <MudTd>@context.QuoteContent</MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(()=>EditQuote(context.Id))"></MudIconButton>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary" OnClick="@(()=>DeleteQuote(context.Id))"></MudIconButton>
+                    <div class="d-flex justify-content-around p-1">
+                        <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Primary" OnClick="@(()=>ViewQuoteDetails(context))"></MudIconButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(()=>EditQuote(context.Id))"></MudIconButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary" OnClick="@(()=>ConfirmDeleteQuote(context.Id))"></MudIconButton>
+                    </div>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -91,9 +98,46 @@
         NavigationManager.NavigateTo($"/edit-quote/{id}");
     }
 
+    internal async Task LoadQuotes(){
+        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
+    }
+
     private async Task DeleteQuote(int id)
     {
         await QuotesApiService.DeleteQuote(id);
         quotes = (await QuotesApiService.GetAllQuotes()).ToList();
     }
+
+    private async Task ConfirmDeleteQuote(int id)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ConfirmDeleteDialog.ContentText), "Do you really want to delete this quote?" },
+            { nameof(ConfirmDeleteDialog.ButtonText), "Delete" },
+            { nameof(ConfirmDeleteDialog.Color), Color.Error }
+        };
+
+        var dialog = DialogService.Show<ConfirmDeleteDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await DeleteQuote(id);
+        }
+    }
+
+    private async Task ViewQuoteDetails(QuoteDto quote)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ViewQuoteDetailsDialog.Author), quote.Author },
+            { nameof(ViewQuoteDetailsDialog.Tags), string.Join(", ", quote.Tags) },
+            { nameof(ViewQuoteDetailsDialog.QuoteContent), quote.QuoteContent }
+        };
+
+        var dialog = DialogService.Show<ViewQuoteDetailsDialog>("Quote Details", parameters);
+        await dialog.Result;
+    }
+
+    
 }

@@ -5,52 +5,101 @@
 @using Quotes.UI.DTO
 
 <div class="d-flex flex-column">
-    <MudText Typo="Typo.h6">Edit Quote</MudText>
+    <MudText Typo="Typo.h6">Add Quotes</MudText>
     <MudPaper>
         <MudForm @ref="form">
-            <MudTextField Label="Author" @bind-Value="quote.Author" Required="true" Variant="Variant.Outlined">
-               <Validation>
-                <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Author name is required </MudText>
+            <MudTextField Label="Author" @bind-Value="currentQuote.Author" Required="true" Variant="Variant.Outlined">
+                <Validation>
+                    <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Author name is required</MudText>
                 </Validation>
             </MudTextField>
-            <MudTextField Label="Tags (comma separated)" @bind-Value="tags" Required="true" Variant="Variant.Outlined">
+            <MudTextField Label="Tags (comma separated)" @bind-Value="currentTags" Required="true" Variant="Variant.Outlined">
                 <Validation>
-                <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Tags are required</MudText>
+                    <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Tags are required</MudText>
                 </Validation>
             </MudTextField>
-            <MudTextField Label="Quote" @bind-Value="quote.QuoteContent" Required="true" Variant="Variant.Outlined" Lines="5">
+            <MudTextField Label="Quote" @bind-Value="currentQuote.QuoteContent" Required="true" Variant="Variant.Outlined" Lines="5">
                 <Validation>
-                <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Quote content is required</MudText>
+                    <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Quote content is required</MudText>
                 </Validation>
             </MudTextField>
             <div class="d-flex flex-row justify-content-center mt-2 mb-2">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuote" Class="mr-2">Save</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GoToHome" Class="ml-2">Back</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GoToHome" Class="mr-2">Back</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewQuote" Class="ml-2">Add Quote</MudButton>
             </div>
         </MudForm>
     </MudPaper>
+    <div class="d-flex flex-row justify-content-between mt-3 mb-2">
+        <MudText Typo="Typo.h5" Style="color:var(--Heading-Text)">Added Quotes</MudText>
+        @if (quotes.Count > 0)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuotes" Class="ml-2">Save Quotes</MudButton>
+        }
+    </div>
+    
+    @if (quotes.Count == 0)
+    {
+        <div class="d-flex justify-content-center">
+            <MudText Typo="Typo.body1" Class="mt-2" Style="color:var(--Heading-Text)">No quotes added.</MudText>
+        </div>
+        
+    }
+    else
+    {
+        <div>
+            @foreach (var quote in quotes)
+            {
+                <MudPaper Class="mt-2 p-2">
+                    <div class="d-flex justify-content-between pr-3">
+                        <div class="d-flex flex-column justify-content-center">
+                            <MudText Typo="Typo.body1"><strong>Author:</strong> @quote.Author</MudText>
+                            <MudText Typo="Typo.body1"><strong>Tags:</strong> @string.Join(", ", quote.Tags)</MudText>
+                            <MudText Typo="Typo.body1"><strong>Quote:</strong> @quote.QuoteContent</MudText>
+                        </div>
+                        <div class="align-self-center">
+                            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => RemoveQuote(quote)">Remove</MudButton>
+                        </div>
+                    </div>
+                </MudPaper>
+            }
+        </div>
+    }
+    
 </div>
 
 @code {
-    
-
-    private CreateQuoteDto quote = new();
-    private string tags;
+    private CreateQuoteDto currentQuote = new();
+    private string currentTags;
+    private List<CreateQuoteDto> quotes = new();
     private MudForm form;
 
-    private async Task SaveQuote()
+    private async Task AddNewQuote()
     {
         await form.Validate();
-        if (!form.IsValid)
-            return;
+        if (form.IsValid)
+        {
+            currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
+            quotes.Add(currentQuote);
+            currentQuote = new CreateQuoteDto(); 
+            currentTags = string.Empty;
+            StateHasChanged();
+        }
+    }
 
-        quote.Tags = tags.Split(',').Select(tag => tag.Trim()).ToList();
-        
-         await QuotesApiService.AddQuotes(new List<CreateQuoteDto> { quote });
-        
-        
+    private void RemoveQuote(CreateQuoteDto quote)
+    {
+        quotes.Remove(quote);
+        StateHasChanged();
+    }
 
-        Navigation.NavigateTo("/");
+    private async Task SaveQuotes()
+    {
+        if (quotes.Count > 0)
+        {
+            await QuotesApiService.AddQuotes(quotes);
+            Navigation.NavigateTo("/");
+        }
+        
     }
 
     private void GoToHome()
@@ -58,3 +107,4 @@
         Navigation.NavigateTo("/");
     }
 }
+
