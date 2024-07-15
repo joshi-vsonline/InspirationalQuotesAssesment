@@ -15,17 +15,20 @@
                     <MudText Typo="Typo.h6" Style="color:dimgrey"><span><MudIconButton Icon="@Icons.Material.Filled.Search" OnClick="@(()=>isSearchExpanded = !isSearchExpanded)"></MudIconButton></span>Search Quotes</MudText>
                     <MudIconButton Icon="@Icons.Material.Filled.ArrowDropDown" Color="Color.Primary" OnClick="@(()=>isSearchExpanded = !isSearchExpanded)"></MudIconButton>
                 </div>
-                
                 <MudCollapse Expanded="@isSearchExpanded">
-                    <MudTextField Label="Author" @bind-Value="searchAuthor" Variant="Variant.Outlined"></MudTextField>
-                    <MudTextField Label="Tags (comma separated)" @bind-Value="searchTags" Variant="Variant.Outlined"></MudTextField>
-                    <MudTextField Label="Quote Content" @bind-Value="searchContent" Variant="Variant.Outlined"></MudTextField>
+                    <QuoteForm @ref="quoteForm"
+                               Author="@searchAuthor"
+                               AuthorChanged="OnAuthorChanged"
+                               Tags="@searchTags"
+                               TagsChanged="OnTagsChanged"
+                               QuoteContent="@searchContent"
+                               QuoteContentChanged="OnQuoteContentChanged"
+                               EnableValidation="false" />
                     <div class="d-flex flex-row justify-content-center mt-2">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchQuotes" Class="mr-2">Search</MudButton>
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="clearSearch" Class="ml-2">Clear Search</MudButton>
                     </div>
                 </MudCollapse>
-                
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -37,7 +40,6 @@
             </div>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddQuote">Add Quote</MudButton>
         </div>
-        
     </MudItem>
     <MudItem xs="12">
         <MudTable AllowUnsorted="true" Items="quotes" Hover="true" Striped="true" Bordered="true" SortLabel="Sort By">
@@ -65,81 +67,3 @@
         </MudTable>
     </MudItem>
 </MudGrid>
-
-@code {
-    private bool isSearchExpanded = false;
-    private string searchAuthor;
-    private string searchTags;
-    private string searchContent;
-    private List<Quotes.UI.DTO.QuoteDto> quotes = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
-    }
-
-    private async Task SearchQuotes()
-    {
-        var tags = string.IsNullOrWhiteSpace(searchTags) ? new List<string>() : searchTags.Split(',').ToList();
-        quotes = (await QuotesApiService.SearchQuotes(searchAuthor, tags, searchContent)).ToList();
-    }
-
-    private void AddQuote()
-    {
-        NavigationManager.NavigateTo("/add-quote");
-    }
-
-    private void clearSearch()
-    {
-        searchAuthor = string.Empty;
-        searchTags = string.Empty;
-        searchContent = string.Empty;
-        LoadQuotes();
-    }
-
-    private void EditQuote(int id)
-    {
-        NavigationManager.NavigateTo($"/edit-quote/{id}");
-    }
-
-    internal async Task LoadQuotes(){
-        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
-    }
-
-    private async Task DeleteQuote(int id)
-    {
-        await QuotesApiService.DeleteQuote(id);
-        quotes = (await QuotesApiService.GetAllQuotes()).ToList();
-    }
-
-    private async Task ConfirmDeleteQuote(int id)
-    {
-        var parameters = new DialogParameters
-        {
-            { nameof(ConfirmDeleteDialog.ContentText), "Do you really want to delete this quote?" },
-            { nameof(ConfirmDeleteDialog.ButtonText), "Delete" },
-            { nameof(ConfirmDeleteDialog.Color), Color.Error }
-        };
-
-        var dialog = DialogService.Show<ConfirmDeleteDialog>("Confirm Delete", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            await DeleteQuote(id);
-        }
-    }
-
-    private async Task ViewQuoteDetails(QuoteDto quote)
-    {
-        var parameters = new DialogParameters
-        {
-            { nameof(ViewQuoteDetailsDialog.Author), quote.Author },
-            { nameof(ViewQuoteDetailsDialog.Tags), string.Join(", ", quote.Tags) },
-            { nameof(ViewQuoteDetailsDialog.QuoteContent), quote.QuoteContent }
-        };
-
-        var dialog = DialogService.Show<ViewQuoteDetailsDialog>("Quote Details", parameters);
-        await dialog.Result;
-    }
-}

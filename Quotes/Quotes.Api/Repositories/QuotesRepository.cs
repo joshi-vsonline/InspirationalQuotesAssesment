@@ -64,14 +64,19 @@ namespace Quotes.Api.Repositories
 
             var result = await query.ToListAsync();
 
-            
+
             if (tags != null && tags.Count > 0)
             {
-                 var lowerTags = tags
-                    .Where(tag => tag != null)
-                    .Select(tag => tag.ToLower())
-                    .ToList();
-                 result = result.Where(t => t.Tags != null && t.Tags
+                var lowerTags = tags
+                               .Where(tag => !string.IsNullOrEmpty(tag))
+                               .Select(tag => tag.ToLower().Trim())
+                               .ToList();
+                
+                if (lowerTags.Any(tag => tag.Contains(",")))
+                {
+                    lowerTags = lowerTags.SelectMany(tag => tag.Split(',')).ToList();
+                }
+                result = result.Where(t => t.Tags != null && t.Tags
                     .Split(',')
                     .Select(tag => tag.Trim().ToLower())
                     .Any(tag => lowerTags.Contains(tag)))

@@ -1,0 +1,27 @@
+﻿@using Quotes.UI.DTO
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+ 
+<MudForm @ref="form">
+<MudTextField Label="Author" T="String" Required=@EnableValidation Variant="Variant.Outlined" Value = "@Author" ValueChanged="HandleAuthorChanged" >
+<Validation>
+<MudText Class="mud-error-text" Style="font-size: 0.75rem;">Author name is required</MudText>
+</Validation>
+</MudTextField>
+<div class="d-flex justify-content-between">
+<MudTextField Label="Add Tag" T="String" Variant="Variant.Outlined" @bind-Value="Tags" OnKeyUp="HandleKeyUp">
+</MudTextField>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddTag" Class="ml-3 mt-2 mb-2">Add Tag</MudButton>
+</div>
+<div class="d-flex flex-wrap">
+        @foreach (var tag in currentTags)
+                {
+<MudChip T="string" Color="Color.Default" OnClose="() => RemoveTag(tag)" Class="mr-1 mb-1">@tag</MudChip>
+                }
+</div>
+<MudTextField Label="Quote" Required=@EnableValidation T="String" Variant="Variant.Outlined" Lines="5" Value=@QuoteContent ValueChanged="HandleQuoteContentChanged">
+<Validation>
+<MudText Class="mud-error-text" Style="font-size: 0.75rem;">Quote content is required</MudText>
+</Validation>
+</MudTextField>
+</MudForm>
