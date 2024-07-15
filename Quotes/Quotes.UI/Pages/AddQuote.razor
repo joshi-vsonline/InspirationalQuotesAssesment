@@ -13,11 +13,21 @@
                     <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Author name is required</MudText>
                 </Validation>
             </MudTextField>
-            <MudTextField Label="Tags (comma separated)" @bind-Value="currentTags" Required="true" Variant="Variant.Outlined">
+            <div class="d-flex justify-content-between">
+                <MudTextField Label="Add Tag" @bind-Value="newTag" Variant="Variant.Outlined">
                 <Validation>
                     <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Tags are required</MudText>
                 </Validation>
-            </MudTextField>
+                </MudTextField>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddTag" Class="ml-3 mt-2 mb-2">Add Tag</MudButton>
+            </div>
+            
+            <div class="d-flex flex-wrap">
+                @foreach (var tag in currentTags)
+                {
+                    <MudChip T="string" Color="Color.Default" OnClose="() => RemoveTag(tag)" Class="mr-1 mb-1">@tag</MudChip>
+                }
+            </div>
             <MudTextField Label="Quote" @bind-Value="currentQuote.QuoteContent" Required="true" Variant="Variant.Outlined" Lines="5">
                 <Validation>
                     <MudText Class="mud-error-text" Style="font-size: 0.75rem;">Quote content is required</MudText>
@@ -33,14 +43,14 @@
         <MudText Typo="Typo.h5" Style="color:var(--Heading-Text)">Added Quotes</MudText>
         @if (quotes.Count > 0)
         {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuotes" Class="ml-2">Save Quotes</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuotes" Class="ml-2">Save Added Quotes</MudButton>
         }
     </div>
     
     @if (quotes.Count == 0)
     {
         <div class="d-flex justify-content-center">
-            <MudText Typo="Typo.body1" Class="mt-2" Style="color:var(--Heading-Text)">No quotes added.</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2" Color="Color.Secondary">No quotes added.</MudText>
         </div>
         
     }
@@ -69,7 +79,8 @@
 
 @code {
     private CreateQuoteDto currentQuote = new();
-    private string currentTags;
+    private List<string> currentTags = new();
+    private string newTag;
     private List<CreateQuoteDto> quotes = new();
     private MudForm form;
 
@@ -78,10 +89,11 @@
         await form.Validate();
         if (form.IsValid)
         {
-            currentQuote.Tags = currentTags.Split(',').Select(tag => tag.Trim()).ToList();
+            currentQuote.Tags = new List<string>(currentTags);
             quotes.Add(currentQuote);
             currentQuote = new CreateQuoteDto(); 
-            currentTags = string.Empty;
+            currentTags.Clear();
+            newTag = string.Empty;
             StateHasChanged();
         }
     }
@@ -100,6 +112,20 @@
             Navigation.NavigateTo("/");
         }
         
+    }
+
+    private void AddTag()
+    {
+        if (!string.IsNullOrWhiteSpace(newTag) && !currentTags.Contains(newTag))
+        {
+            currentTags.Add(newTag.Trim());
+            newTag = string.Empty;
+        }
+    }
+
+    private void RemoveTag(string tag)
+    {
+        currentTags.Remove(tag);
     }
 
     private void GoToHome()

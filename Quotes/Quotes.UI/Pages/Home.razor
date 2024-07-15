@@ -40,11 +40,11 @@
         
     </MudItem>
     <MudItem xs="12">
-        <MudTable Items="quotes" Hover="true" Striped="true">
+        <MudTable AllowUnsorted="true" Items="quotes" Hover="true" Striped="true" Bordered="true" SortLabel="Sort By">
             <HeaderContent>
-                <MudTh>Author</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<QuoteDto, object>(x=>x.Author)">Author</MudTableSortLabel></MudTh>
                 <MudTh>Tags</MudTh>
-                <MudTh>Quote</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<QuoteDto, object>(x=>x.QuoteContent)">Quote</MudTableSortLabel></MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -59,6 +59,9 @@
                     </div>
                 </MudTd>
             </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25 }" />
+            </PagerContent>
         </MudTable>
     </MudItem>
 </MudGrid>
@@ -91,6 +94,7 @@
         searchAuthor = string.Empty;
         searchTags = string.Empty;
         searchContent = string.Empty;
+        LoadQuotes();
     }
 
     private void EditQuote(int id)
@@ -138,6 +142,4 @@
         var dialog = DialogService.Show<ViewQuoteDetailsDialog>("Quote Details", parameters);
         await dialog.Result;
     }
-
-    
 }
